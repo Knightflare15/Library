@@ -11,6 +11,19 @@ function updateBookList() {
   myLibrary.forEach((book) => {
     const li = document.createElement("li");
     li.textContent = `${book.name} by ${book.author}`;
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Delete";
+    deleteBtn.style.marginLeft = "10px";
+    deleteBtn.addEventListener("click", () => {
+      const index = myLibrary.findIndex(b => b.id === book.id);
+      if (index > -1) {
+        myLibrary.splice(index, 1);
+        updateBookList(); 
+        searchResult.textContent = "";
+      }
+    });
+
+    li.appendChild(deleteBtn);
     bookList.appendChild(li);
   });
 }
@@ -20,7 +33,12 @@ function Book(name,author) {
   this.id=crypto.randomUUID();
   this.name=name;
   this.author=author;
+  this.read=false;
 
+}
+Book.prototype.toggleRead= function ()
+{
+  this.read=!this.read;
 }
 
 form.addEventListener("submit", function (e) {
@@ -49,8 +67,33 @@ searchBtn.addEventListener("click", function () {
     return;
   }
 
-  const found = myLibrary.find(book => book.name.toLowerCase().includes(query));
-  searchResult.textContent = found
-    ? `"${found.id}" : "${found.name}" by ${found.author} is available in the library.`
-    : `Book not found.`;
+  const found = myLibrary.filter(book => book.name.toLowerCase().includes(query));
+  if(found.length === 0){
+    searchResult.textContent="no books found";
+    return;
+  }
+  const resultsContainer = document.createElement("div");
+  found.forEach(book => {
+    const bookDiv = document.createElement("div");
+    bookDiv.style.marginBottom = "10px";
+
+    const readStatus = book.read ? "Read" : "Unread";
+    bookDiv.innerHTML = `"${book.id}" : <strong>${book.name}</strong> by ${book.author} — <em>${readStatus}</em>`;
+
+
+    const toggleBtn = document.createElement("button");
+    toggleBtn.textContent = "Toggle Read";
+    toggleBtn.style.marginLeft = "10px";
+    toggleBtn.addEventListener("click", () => {
+      book.toggleRead();
+      const newStatus = book.read ? "Read" : "Unread";
+      bookDiv.innerHTML = `"${book.id}" : <strong>${book.name}</strong> by ${book.author} — <em>${newStatus}</em>`;
+      bookDiv.appendChild(toggleBtn); 
+    });
+
+    bookDiv.appendChild(toggleBtn);
+    resultsContainer.appendChild(bookDiv);
+  });
+
+  searchResult.appendChild(resultsContainer);
 });
